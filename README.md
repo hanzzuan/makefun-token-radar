@@ -16,6 +16,9 @@ value, and hands in a web dashboard with a farm plan for each row.
   their market cap.
 - `vendor/makefun-board.ts` — the kit's dossier library, unchanged.
 - `screenshots/` — the board, a detail view and a filtered view, rendered from the
-  built dashboard.
+  built dashboard. The images are stored base64 (`*.jpg.b64`: the entry's transport
+  is text-only, so the binary originals stay local) and `main.ts` decodes each one
+  into its JPEG in `/output/screenshots`; the decoded bytes are the renders
+  themselves, unedited.
 
 MIT licensed.

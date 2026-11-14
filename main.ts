@@ -70,7 +70,29 @@ function copyFiles(from: string, to: string): string[] {
 }
 
 copyFiles(join(here, 'dashboard'), join(out, 'dashboard'));
-const shots = copyFiles(join(here, 'screenshots'), join(out, 'screenshots'));
+// Screenshots: the repository stores them base64 (the entry's transport is text-only), one
+// *.b64 file per image; decode each into its image in /output/screenshots, and copy any real
+// image file as-is. The decoded bytes are the renders themselves, unedited.
+const shotDir = join(out, 'screenshots');
+mkdirSync(shotDir, { recursive: true });
+const shots: string[] = [];
+const seenShots = new Set<string>();
+const srcShots = join(here, 'screenshots');
+if (existsSync(srcShots)) {
+  for (const name of readdirSync(srcShots)) {
+    if (name.startsWith('.')) continue;
+    const src = join(srcShots, name);
+    if (!statSync(src).isFile()) continue;
+    if (name.endsWith('.b64')) {
+      const target = name.slice(0, -4);
+      writeFileSync(join(shotDir, target), Buffer.from(readFileSync(src, 'utf8').replace(/\s/g, ''), 'base64'));
+      if (!seenShots.has(target)) { seenShots.add(target); shots.push(target); }
+    } else {
+      copyFileSync(src, join(shotDir, name));
+      if (!seenShots.has(name)) { seenShots.add(name); shots.push(name); }
+    }
+  }
+}
 if (shots.length < 3) {
   process.stderr.write(`token radar: screenshots/ holds ${shots.length} image${shots.length === 1 ? '' : 's'}: hand in 3, the board, a detail view and a filtered view\n`);
   process.exit(1);
